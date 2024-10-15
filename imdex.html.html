@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Running Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #game-container {
+            text-align: center;
+            width: 900px;
+        }
+        #game-background {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 60%, #4CAF50 60%, #4CAF50 100%);
+            border: 2px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+        #game-board {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 400px;
+        }
+        .track {
+            position: absolute;
+            width: 100%;
+            height: 100px;
+            box-sizing: border-box;
+            border-bottom: 2px solid white;
+        }
+        .track:last-child {
+            border-bottom: none;
+        }
+        .character {
+            position: absolute;
+            left: 0;
+            width: 50px;
+            height: 50px;
+            font-size: 40px;
+            line-height: 50px;
+            transition: left 0.1s linear;
+        }
+        #status {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        #instructions {
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .finish-line {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background-color: white;
+        }
+        .sun {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: yellow;
+            border-radius: 50%;
+            box-shadow: 0 0 20px yellow;
+        }
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+        .cloud:nth-child(1) {
+            width: 100px;
+            height: 40px;
+            top: 50px;
+            left: 100px;
+        }
+        .cloud:nth-child(2) {
+            width: 80px;
+            height: 30px;
+            top: 30px;
+            left: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Fruit Running Game</h1>
+        <div id="game-background">
+            <div class="sun"></div>
+            <div class="cloud"></div>
+            <div class="cloud"></div>
+            <div id="game-board">
+                <div class="finish-line"></div>
+            </div>
+        </div>
+        <div id="status">Select a character using keys 1-4</div>
+        <div id="instructions">
+            Select a character using keys 1-4<br>
+            The race will start automatically after selection
+        </div>
+    </div>
+
+    <script>
+        const characters = ['🍎', '🍌', '🍊', '🍇'];
+        let selectedCharacter = null;
+        let gameRunning = false;
+        let goalDistance = 845; // Width of game board minus character width
+        let distances = [0, 0, 0, 0];
+        let speeds = [0, 0, 0, 0];
+
+        const gameBoard = document.getElementById('game-board');
+        const statusElement = document.getElementById('status');
+
+        function initializeGame() {
+            gameBoard.innerHTML = '<div class="finish-line"></div>';
+            characters.forEach((char, index) => {
+                const track = document.createElement('div');
+                track.className = 'track';
+                track.style.top = `${index * 100}px`;
+                
+                const charElement = document.createElement('div');
+                charElement.className = 'character';
+                charElement.textContent = char;
+                charElement.style.top = '25px';
+                
+                track.appendChild(charElement);
+                gameBoard.appendChild(track);
+            });
+        }
+
+        function selectCharacter(index) {
+            if (gameRunning) return;
+            selectedCharacter = index;
+            statusElement.textContent = `${characters[index]} selected. Race is starting!`;
+            setTimeout(startGame, 1000);
+        }
+
+        function startGame() {
+            if (selectedCharacter === null) return;
+            gameRunning = true;
+            distances = [0, 0, 0, 0];
+            speeds = distances.map(() => Math.random() * 2 + 1); // Random speed between 1 and 3
+            runGame();
+        }
+
+        function runGame() {
+            if (!gameRunning) return;
+
+            distances = distances.map((d, i) => d + speeds[i]);
+            updateBoard();
+
+            const winnerIndex = distances.findIndex(d => d >= goalDistance);
+            if (winnerIndex !== -1) {
+                gameRunning = false;
+                statusElement.textContent = `${characters[winnerIndex]} wins! Press any key to play again.`;
+            } else {
+                requestAnimationFrame(runGame);
+            }
+        }
+
+        function updateBoard() {
+            document.querySelectorAll('.character').forEach((el, i) => {
+                el.style.left = `${distances[i]}px`;
+            });
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key >= '1' && event.key <= '4') {
+                selectCharacter(parseInt(event.key) - 1);
+            } else if (!gameRunning) {
+                initializeGame();
+                statusElement.textContent = 'Select a character using keys 1-4';
+            }
+        });
+
+        initializeGame();
+    </script>
+</body>
+</html>
